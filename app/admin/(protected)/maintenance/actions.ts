@@ -23,11 +23,13 @@ export async function createMaintenance(formData: FormData) {
   const pageId = String(formData.get("pageId") ?? "");
   const session = await requireCapability("incident.manage", pageId);
   const page = await assertPageInOrg(pageId, session.orgId);
+  const scheduledStart = zonedDateTimeToUtc(String(formData.get("scheduledStart") ?? ""), page.timezone);
+  if (scheduledStart < new Date()) throw new Error("Start time cannot be in the past");
   const maintenance = await createMaintenanceDomain(session.orgId, {
     pageId,
     name: String(formData.get("name") ?? ""),
     body: String(formData.get("body") ?? ""),
-    scheduledStart: zonedDateTimeToUtc(String(formData.get("scheduledStart") ?? ""), page.timezone),
+    scheduledStart,
     scheduledEnd: zonedDateTimeToUtc(String(formData.get("scheduledEnd") ?? ""), page.timezone),
     autoTransition: formData.get("autoTransition") === "on",
     notify: formData.get("notify") === "on",

@@ -11,7 +11,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckRow } from "@/components/admin/operate-ui";
-import { utcToZonedDateTime } from "@/lib/page-locale";
+import { zonedDateTimeToUtc, utcToZonedDateTime } from "@/lib/page-locale";
 import { cn } from "@/lib/utils";
 import { INPUT_LIMITS } from "@/lib/input-limits";
 
@@ -39,8 +39,30 @@ export function MaintenanceForm({
   const [notify, setNotify] = useState(true);
   const [sendReminder, setSendReminder] = useState(true);
 
+  async function validatedAction(formData: FormData) {
+    if (!String(formData.get("name") ?? "").trim()) throw new Error("Title is required");
+    if (!String(formData.get("body") ?? "").trim()) throw new Error("Message is required");
+    if (formData.get("pageWide") !== "on" && formData.getAll("componentIds").length === 0) {
+      throw new Error("Select a component or explicitly mark maintenance page-wide");
+    }
+    if (formData.get("sendReminder") === "on") {
+      const minutes = Number(formData.get("reminderMinutesBefore"));
+      if (!Number.isInteger(minutes) || minutes < 5 || minutes > 7 * 24 * 60) {
+        throw new Error("Reminder minutes must be between 5 and 10,080");
+      }
+    }
+    const start = zonedDateTimeToUtc(String(formData.get("scheduledStart") ?? ""), timeZone);
+    const end = zonedDateTimeToUtc(String(formData.get("scheduledEnd") ?? ""), timeZone);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+      throw new Error("Start and end times are required");
+    }
+    if (start >= end) throw new Error("End time must be after start time");
+    if (start < new Date()) throw new Error("Start time cannot be in the past");
+    return action(formData);
+  }
+
   return (
-    <PlatformActionForm action={action} successMessage="Maintenance scheduled" className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" messageClassName="empty:hidden lg:col-span-2">
+    <PlatformActionForm action={validatedAction} successMessage="Maintenance scheduled" className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" messageClassName="empty:hidden lg:col-span-2">
       <Input type="hidden" name="pageId" value={pageId} />
 
       <div className="space-y-6">
