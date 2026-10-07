@@ -9,7 +9,8 @@ describe("unified page creation workflow", () => {
   it("offers one primary page-list entry point and no setup wizard", () => {
     const pageList = source("app/admin/(protected)/pages/page.tsx");
     expect(pageList).toContain('href="/organization/pages/new"');
-    expect(pageList).toContain("Continue setup");
+    expect(pageList).toContain("page.setupCompletedAt === null ? \"Draft\"");
+    expect(pageList).toContain("aria-label={`Edit ${page.name}`}");
     expect(pageList).not.toContain("Setup wizard");
     expect(pageList).toContain("Create status page in this hub");
   });
