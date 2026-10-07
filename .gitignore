@@ -10,6 +10,11 @@ playwright-report
 test-results
 .env
 .env*.local
+/.env.backup
+/.env.bak
+/auth.ts.bak
+/docker-compose.yml.backup
+/openssl_sagar_pawar
 login-credentials.txt
 *.db
 *.db-journal
