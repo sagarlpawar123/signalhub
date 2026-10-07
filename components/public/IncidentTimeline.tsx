@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   IMPACT_COLOR,
   IMPACT_LABEL,
+  INCIDENT_STATUS_COLOR,
   INCIDENT_STATUS_LABEL,
   MAINTENANCE_STATUS_LABEL,
   type Impact,
@@ -85,7 +86,13 @@ export function IncidentCard({
 }) {
   const incidentBasePath = incident.linkSlug ? `/${incident.linkSlug}` : pageSlug ? `/${pageSlug}` : "";
   const impact = incident.impact as Impact;
-  const color = incident.isMaintenance ? "var(--blue)" : IMPACT_COLOR[impact];
+  const isActive = incident.isMaintenance
+    ? incident.maintenanceStatus === "IN_PROGRESS" || incident.maintenanceStatus === "VERIFYING"
+    : incident.status !== "RESOLVED";
+  const color = isActive ? "var(--amber)" : incident.isMaintenance ? "var(--blue)" : IMPACT_COLOR[impact];
+  const statusColor = incident.isMaintenance
+    ? isActive ? "var(--amber)" : "var(--blue)"
+    : INCIDENT_STATUS_COLOR[incident.status as IncidentStatus];
   const label = incident.isMaintenance
     ? MAINTENANCE_STATUS_LABEL[(incident.maintenanceStatus as MaintenanceStatus) ?? "SCHEDULED"]
     : INCIDENT_STATUS_LABEL[incident.status as IncidentStatus];
@@ -98,10 +105,18 @@ export function IncidentCard({
         : incident.isMaintenance
           ? label
           : INCIDENT_STATUS_LABEL[update.status as IncidentStatus],
+    displayColor: incident.isMaintenance
+      ? "var(--amber)"
+      : !incident.isMaintenance && index > 0 && incident.updates[index - 1]?.status === update.status
+        ? "var(--blue)"
+        : INCIDENT_STATUS_COLOR[update.status as IncidentStatus],
   }));
 
   return (
-    <div className="public-incident-card border border-[var(--line)] border-l-2 bg-[var(--surface)] p-5" style={{ borderLeftColor: color }}>
+    <div
+      className={`public-incident-card border border-[var(--line)] border-l-2 p-5 ${isActive ? "bg-[var(--amber-soft)]" : "bg-[var(--surface)]"}`}
+      style={{ borderLeftColor: color }}
+    >
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <h3 className="font-mono font-semibold text-sm text-[var(--fg)]">
           {linkPermalink ? (
@@ -112,14 +127,29 @@ export function IncidentCard({
             incident.name
           )}
         </h3>
-        {!incident.isMaintenance && (
+        <div className="flex flex-wrap items-center gap-2">
           <span
+            data-incident-status={incident.isMaintenance ? incident.maintenanceStatus : incident.status}
             className="text-xs font-mono font-medium px-2.5 py-1 shrink-0 border"
-            style={{ color, borderColor: color, backgroundColor: "color-mix(in srgb, " + color + " 12%, transparent)" }}
+            style={{
+              color: statusColor,
+              borderColor: statusColor,
+              backgroundColor: incident.isMaintenance
+                ? isActive ? "var(--amber-soft)" : "var(--blue-soft)"
+                : `color-mix(in srgb, ${statusColor} 12%, transparent)`,
+            }}
           >
-            {IMPACT_LABEL[impact]}
+            {label}
           </span>
-        )}
+          {!incident.isMaintenance && (
+            <span
+              className="text-xs font-mono font-medium px-2.5 py-1 shrink-0 border"
+              style={{ color: IMPACT_COLOR[impact], borderColor: IMPACT_COLOR[impact], backgroundColor: "color-mix(in srgb, " + IMPACT_COLOR[impact] + " 12%, transparent)" }}
+            >
+              {IMPACT_LABEL[impact]}
+            </span>
+          )}
+        </div>
       </div>
       {incident.components.length > 0 && (
         <p className="text-xs text-[var(--fg-dim)] mt-1.5">Affects: {incident.components.map((c) => c.component.name).join(", ")}</p>
@@ -144,7 +174,7 @@ export function IncidentCard({
                 />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 className="text-lg font-semibold text-[var(--fg)]">{update.displayStatus}</h3>
+                    <h3 className="text-lg font-semibold" style={{ color: update.displayColor }}>{update.displayStatus}</h3>
                     <span className="text-sm text-[var(--fg-soft)]">{relativeTimestamp(update.createdAt)}</span>
                   </div>
                   <time className="mt-1 inline-block text-sm text-[var(--fg)]" dateTime={update.createdAt.toISOString()}>
@@ -161,7 +191,7 @@ export function IncidentCard({
         <div className="mt-4 space-y-4 border-l-2 border-[var(--line)] pl-4">
           {decoratedUpdates.map((update) => (
             <div key={update.id} className="text-sm">
-              <span className="font-medium text-[var(--fg)]">{update.displayStatus}</span>
+              <span className="font-medium" style={{ color: update.displayColor }}>{update.displayStatus}</span>
               <span className="ml-2 font-mono text-xs text-[var(--fg-dim)]">{fmt(update.createdAt, locale, timeZone)}</span>
               <EditedNote editedAt={update.editedAt} locale={locale} timeZone={timeZone} />
               <p className="mt-1 whitespace-pre-wrap leading-relaxed text-[var(--fg-soft)]">{update.body}</p>
@@ -181,19 +211,21 @@ export function IncidentCard({
   );
 }
 
-export function PastIncidentsByDay({
-  incidents,
-  pageSlug,
-  days = 14,
-  locale = "en",
-  timeZone = "UTC",
-}: {
+type IncidentsByDayProps = {
   incidents: IncidentRow[];
   pageSlug: string;
   days?: number;
   locale?: string;
   timeZone?: string;
-}) {
+};
+
+function IncidentsByDay({
+  incidents,
+  pageSlug,
+  days = 14,
+  locale = "en",
+  timeZone = "UTC",
+}: IncidentsByDayProps) {
   const buckets: { date: string; label: string; incidents: IncidentRow[] }[] = [];
   const now = new Date();
   for (let i = 0; i < days; i++) {
@@ -243,4 +275,15 @@ export function PastIncidentsByDay({
       ))}
     </div>
   );
+}
+
+export function PastIncidentsByDay(props: IncidentsByDayProps) {
+  return <IncidentsByDay {...props} />;
+}
+
+export function PastMaintenanceByDay({ incidents, ...props }: IncidentsByDayProps) {
+  const completedMaintenance = incidents.filter(
+    (incident) => incident.isMaintenance && incident.maintenanceStatus === "COMPLETED"
+  );
+  return <IncidentsByDay {...props} incidents={completedMaintenance} />;
 }

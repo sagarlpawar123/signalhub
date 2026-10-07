@@ -132,6 +132,13 @@ export const INCIDENT_STATUS_LABEL: Record<IncidentStatus, string> = {
   RESOLVED: "Resolved",
 };
 
+export const INCIDENT_STATUS_COLOR: Record<IncidentStatus, string> = {
+  INVESTIGATING: "var(--red)",
+  IDENTIFIED: "var(--amber)",
+  MONITORING: "var(--orange)",
+  RESOLVED: "var(--green)",
+};
+
 export const MAINTENANCE_STATUS_LABEL: Record<MaintenanceStatus, string> = {
   SCHEDULED: "Scheduled",
   IN_PROGRESS: "In Progress",

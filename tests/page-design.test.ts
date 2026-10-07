@@ -45,6 +45,30 @@ describe("status page design", () => {
     }
   });
 
+  it("places the operational sections in order across every built-in status template", () => {
+    for (const key of PAGE_TEMPLATE_KEYS) {
+      const design = templateDesign(key);
+      for (const breakpoint of ["desktop", "tablet", "mobile"] as const) {
+        const columns = breakpoint === "desktop" ? 12 : breakpoint === "tablet" ? 8 : 4;
+        const placements = pageGridPlacements(design, "status", breakpoint);
+        const orderedBlocks = [...placements]
+          .sort((left, right) => left.order - right.order)
+          .map((placement) => allSurfaceBlocks(design, "status").find((block) => block.id === placement.blockId))
+          .filter((block) => block?.type === "ACTIVE_INCIDENTS" || block?.type === "SCHEDULED_MAINTENANCE" || block?.type === "HISTORY_PREVIEW");
+
+        expect(orderedBlocks.map((block) => block?.type)).toEqual([
+          "ACTIVE_INCIDENTS",
+          "SCHEDULED_MAINTENANCE",
+          "HISTORY_PREVIEW",
+        ]);
+        expect(orderedBlocks.every((block) =>
+          placements.find((placement) => placement.blockId === block?.id)?.column === 1
+          && placements.find((placement) => placement.blockId === block?.id)?.span === columns
+        )).toBe(true);
+      }
+    }
+  });
+
   it("keeps the editor picker focused on distinct template starting points", () => {
     expect(PAGE_TEMPLATE_PICKER_KEYS).toEqual([
       "CENTERED_SUMMARY",

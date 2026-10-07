@@ -595,13 +595,13 @@ function baseDesign(templateKey: PageTemplateKey, brand = "#0f8ca8"): StatusPage
         ],
         primary: [
           b({ id: "active-incidents", type: "ACTIVE_INCIDENTS", hidden: false, settings: { heading: "Active incidents" } }),
+          b({ id: "maintenance", type: "SCHEDULED_MAINTENANCE", hidden: false, settings: { heading: "Active maintenance" } }),
+          b({ id: "history-preview", type: "HISTORY_PREVIEW", hidden: false, settings: { heading: "Past maintenance", days: 14 } }),
           components,
           b({ id: "metrics", type: "METRICS", hidden: false, settings: { heading: "System metrics", columns: 2 } }),
-          b({ id: "history-preview", type: "HISTORY_PREVIEW", hidden: false, settings: { heading: "Past incidents", days: 14 } }),
         ],
         sidebar: [
           b({ id: "subscribe", type: "SUBSCRIBE", hidden: false, settings: { style: "PANEL", heading: "Subscribe to updates" } }),
-          b({ id: "maintenance", type: "SCHEDULED_MAINTENANCE", hidden: false, settings: { heading: "Scheduled maintenance" } }),
         ],
       },
       history: {
@@ -700,9 +700,7 @@ export function templateDesign(templateKey: PageTemplateKey, brand = "#0f8ca8"):
   if (["BANNER_SPOTLIGHT", "UPTIME_TIMELINE", "PRODUCT_GRID"].includes(templateKey)) {
     place("COMPONENT_STATUS", 1, 12);
     place("METRICS", 1, 6);
-    place("HISTORY_PREVIEW", 7, 6);
     place("SUBSCRIBE", 1, 6);
-    place("SCHEDULED_MAINTENANCE", 7, 6);
   } else if (templateKey === "ILLUSTRATED_HERO") {
     place("OVERALL_STATUS", 1, 7);
     place("SUBSCRIBE", 9, 4);
@@ -710,11 +708,13 @@ export function templateDesign(templateKey: PageTemplateKey, brand = "#0f8ca8"):
   } else if (templateKey === "DENSE_OPERATIONS") {
     place("OVERALL_STATUS", 1, 4);
     place("ANNOUNCEMENTS", 5, 8);
-    place("ACTIVE_INCIDENTS", 1, 6);
     place("METRICS", 7, 6);
     place("COMPONENT_STATUS", 1, 12);
   } else if (templateKey === "MINIMAL_ENTERPRISE") {
     for (const placement of design.surfaces.status.grid.desktop) Object.assign(placement, { column: 1, span: 12 });
+  }
+  for (const type of ["ACTIVE_INCIDENTS", "SCHEDULED_MAINTENANCE", "HISTORY_PREVIEW"] as const) {
+    place(type, 1, 12);
   }
   return statusPageDesignSchema.parse(design);
 }
