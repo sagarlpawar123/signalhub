@@ -228,15 +228,6 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ s
       <PageSurfaceLayout
         design={design}
         surface="status"
-        intro={(
-          <section className="public-ops-intro mb-8">
-            <p className="font-mono text-xs uppercase tracking-[0.18em] text-[var(--fg-dim)]">Live service health</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--fg)] sm:text-3xl">{page.headline || "Service Status"}</h1>
-            {page.aboutText && !design.surfaces.status.full.some((block) => block.type === "OVERALL_STATUS" && !block.hidden && block.settings.showDescription) && (
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--fg-soft)]">{page.aboutText}</p>
-            )}
-          </section>
-        )}
         renderBlock={renderBlock}
       />
       <PublicFooter removeBranding={page.removeBranding} termsUrl={page.termsUrl} privacyUrl={page.privacyUrl} supportUrl={page.supportUrl} design={design} />
