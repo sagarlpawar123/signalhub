@@ -385,6 +385,36 @@ select:not([multiple]) {
   letter-spacing: -0.02em;
 }
 
+.public-active-indicator {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #9ccbd4;
+  animation: public-active-indicator-pulse 1.8s ease-out infinite;
+}
+
+@keyframes public-active-indicator-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(156 203 212 / 55%);
+  }
+
+  70% {
+    box-shadow: 0 0 0 0.45rem rgb(156 203 212 / 0%);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgb(156 203 212 / 0%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-active-indicator {
+    animation: none;
+  }
+}
+
 .public-status-banner {
   border-radius: 0.75rem !important;
   box-shadow: 0 18px 40px -22px color-mix(in srgb, var(--page-brand, var(--cyan)) 60%, transparent) !important;

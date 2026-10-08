@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { overallBanner, COMPONENT_STATUS_COLOR } from "@/lib/status";
 import { PublicHeader, PublicFooter } from "@/components/public/PublicChrome";
+import { ActiveStatusIndicator } from "@/components/public/ActiveStatusIndicator";
 import { StatusBanner } from "@/components/public/StatusBanner";
 import { SubscribeModal } from "@/components/public/SubscribeModal";
 import { IncidentCard, PastIncidentsByDay } from "@/components/public/IncidentTimeline";
@@ -153,7 +154,10 @@ export default async function HubPage({ params }: { params: Promise<{ slug: stri
       case "ACTIVE_INCIDENTS":
         return activeIncidents.length ? (
           <section>
-            <h2 className="mb-4 text-lg font-semibold">{block.settings.heading}</h2>
+            <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold">
+              <ActiveStatusIndicator />
+              {block.settings.heading}
+            </h2>
             <div className="space-y-3">
               {activeIncidents.map((incident) => (
                 <IncidentCard key={incident.id} incident={incident} pageSlug={hub.slug} locale={hub.language} timeZone={hub.timezone} />
@@ -164,7 +168,10 @@ export default async function HubPage({ params }: { params: Promise<{ slug: stri
       case "SCHEDULED_MAINTENANCE":
         return activeMaintenance.length || scheduledMaintenance.length ? (
           <section>
-            <h2 className="mb-4 text-lg font-semibold">{block.settings.heading}</h2>
+            <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold">
+              {activeMaintenance.length > 0 && <ActiveStatusIndicator />}
+              {block.settings.heading}
+            </h2>
             <div className="space-y-3">
               {[...activeMaintenance, ...scheduledMaintenance].map((incident) => (
                 <IncidentCard key={incident.id} incident={incident} pageSlug={hub.slug} locale={hub.language} timeZone={hub.timezone} />

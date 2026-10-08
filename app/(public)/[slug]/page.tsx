@@ -12,6 +12,7 @@ import Link from "next/link";
 import { scopeCustomCss } from "@/lib/custom-css";
 import { publicPagePath } from "@/lib/public-path";
 import { PublicAnalytics } from "@/components/public/PublicAnalytics";
+import { ActiveStatusIndicator } from "@/components/public/ActiveStatusIndicator";
 import type { Metadata } from "next";
 import { pageDesignFor, type PageDesignBlock } from "@/lib/page-design";
 import { PageDesignShell } from "@/components/public/PageDesignShell";
@@ -112,7 +113,10 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ s
       case "ACTIVE_INCIDENTS":
         return activeIncidents.length ? (
           <section className="public-ops-section">
-            <h2 className="mb-3 text-lg font-semibold">{block.settings.heading}</h2>
+            <h2 className="mb-3 flex items-center gap-3 text-lg font-semibold">
+              <ActiveStatusIndicator />
+              {block.settings.heading}
+            </h2>
             <div className="space-y-3">
               {activeIncidents.map((incident) => <IncidentCard key={incident.id} incident={incident} pageSlug={incidentPageSlug} locale={page.language} timeZone={page.timezone} />)}
             </div>
@@ -122,7 +126,8 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ s
         if (activeMaintenance.length === 0) return null;
         return (
           <section className="public-ops-section">
-            <h2 className="mb-3 text-lg font-semibold">
+            <h2 className="mb-3 flex items-center gap-3 text-lg font-semibold">
+              <ActiveStatusIndicator />
               {block.settings.heading === "Scheduled maintenance" ? "Active maintenance" : block.settings.heading}
             </h2>
             <div className="space-y-3">
