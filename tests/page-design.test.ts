@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PageDesignShell } from "../components/public/PageDesignShell";
+import { PageSurfaceLayout } from "../components/public/PageSurfaceLayout";
 import {
   PAGE_TEMPLATE_KEYS,
   PAGE_TEMPLATE_PICKER_KEYS,
@@ -67,6 +68,25 @@ describe("status page design", () => {
         )).toBe(true);
       }
     }
+  });
+
+  it("keeps active maintenance near the top after active incidents regardless of saved grid order", () => {
+    const design = templateDesign("CENTERED_SUMMARY");
+    design.surfaces.status.grid.desktop.reverse().forEach((placement, order) => {
+      placement.order = order;
+    });
+    const html = renderToStaticMarkup(
+      PageSurfaceLayout({
+        design,
+        surface: "status",
+        renderBlock: (block) => block.id,
+      })
+    );
+    const renderedTypes = [...html.matchAll(/data-page-block="([^"]+)"/g)].map((match) => match[1]);
+
+    expect(renderedTypes.indexOf("ACTIVE_INCIDENTS")).toBeLessThan(renderedTypes.indexOf("SCHEDULED_MAINTENANCE"));
+    expect(renderedTypes.indexOf("SCHEDULED_MAINTENANCE")).toBeLessThan(renderedTypes.indexOf("HISTORY_PREVIEW"));
+    expect(renderedTypes.indexOf("SCHEDULED_MAINTENANCE")).toBeLessThan(renderedTypes.indexOf("COMPONENT_STATUS"));
   });
 
   it("keeps the editor picker focused on distinct template starting points", () => {

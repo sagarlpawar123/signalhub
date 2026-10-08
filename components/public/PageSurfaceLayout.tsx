@@ -23,9 +23,27 @@ export function PageSurfaceLayout({
     : [];
   const trailingSubscriptionIds = new Set(trailingSubscriptions.map((block) => block.id));
   const gridBlocks = blocks.filter((block) => !trailingSubscriptionIds.has(block.id));
-  const desktop = new Map(pageGridPlacements(design, surface, "desktop").map((placement) => [placement.blockId, placement]));
-  const tablet = new Map(pageGridPlacements(design, surface, "tablet").map((placement) => [placement.blockId, placement]));
-  const mobile = new Map(pageGridPlacements(design, surface, "mobile").map((placement) => [placement.blockId, placement]));
+  const placementsFor = (breakpoint: "desktop" | "tablet" | "mobile") => {
+    const placements = pageGridPlacements(design, surface, breakpoint);
+    if (surface !== "status") return placements;
+
+    const fullBlockIds = new Set(design.surfaces.status.full.map((block) => block.id));
+    const blockById = new Map(blocks.map((block) => [block.id, block]));
+    const priority = (blockId: string) => {
+      const block = blockById.get(blockId);
+      if (fullBlockIds.has(blockId)) return 0;
+      if (block?.type === "ACTIVE_INCIDENTS") return 1;
+      if (block?.type === "SCHEDULED_MAINTENANCE") return 2;
+      return 3;
+    };
+
+    return [...placements]
+      .sort((left, right) => priority(left.blockId) - priority(right.blockId) || left.order - right.order)
+      .map((placement, order) => ({ ...placement, order }));
+  };
+  const desktop = new Map(placementsFor("desktop").map((placement) => [placement.blockId, placement]));
+  const tablet = new Map(placementsFor("tablet").map((placement) => [placement.blockId, placement]));
+  const mobile = new Map(placementsFor("mobile").map((placement) => [placement.blockId, placement]));
   return (
     <main className={`public-ops-main ${contentWidthClass(design)} mx-auto w-full flex-1 px-4 py-8 sm:py-12`}>
       {intro}
