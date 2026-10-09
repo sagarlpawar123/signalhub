@@ -1,4 +1,6 @@
 .page {
+  --landing-font-sans: Arial, Helvetica, sans-serif;
+  --landing-font-serif: Georgia, "Times New Roman", serif;
   --canvas: var(--color-canvas);
   --surface: #ffffff;
   --ink: var(--color-ink);
