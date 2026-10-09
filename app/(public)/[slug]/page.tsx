@@ -5,10 +5,9 @@ import { PublicHeader, PublicFooter } from "@/components/public/PublicChrome";
 import { StatusBanner } from "@/components/public/StatusBanner";
 import { ComponentList } from "@/components/public/ComponentList";
 import { SubscribeModal } from "@/components/public/SubscribeModal";
-import { IncidentCard, PastMaintenanceByDay } from "@/components/public/IncidentTimeline";
+import { IncidentCard } from "@/components/public/IncidentTimeline";
 import { MetricChart } from "@/components/public/MetricChart";
 import { getMetricInsights } from "@/lib/metric-series";
-import Link from "next/link";
 import { scopeCustomCss } from "@/lib/custom-css";
 import { publicPagePath } from "@/lib/public-path";
 import { PublicAnalytics } from "@/components/public/PublicAnalytics";
@@ -53,10 +52,9 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ s
 
   const { groups, ungrouped, banner } = await getComponentsForPage(page.id, access.visibleComponentIds);
   const incidents = await getIncidentsForPage(page.id, access.visibleComponentIds);
-  const { active, past } = splitActiveAndPast(incidents);
+  const { active } = splitActiveAndPast(incidents);
   const activeIncidents = active.filter((i) => !i.isMaintenance);
   const activeMaintenance = active.filter((i) => i.isMaintenance);
-  const pastMaintenance = past.filter((i) => i.isMaintenance && i.maintenanceStatus === "COMPLETED");
 
   const metrics = await getMetricsForPage(page.id, access.visibleComponentIds);
   const metricInsights = await getMetricInsights(metrics.map((metric) => metric.id));
@@ -157,19 +155,6 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ s
             </div>
           </section>
         ) : null;
-      case "HISTORY_PREVIEW":
-        if (pastMaintenance.length === 0) return null;
-        return (
-          <section className="public-ops-section">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold">
-                {block.settings.heading === "Past incidents" ? "Past maintenance" : block.settings.heading}
-              </h2>
-              <Link href={`${basePath}/history`} className="text-sm underline" style={{ color: "var(--page-brand)" }}>Incident history</Link>
-            </div>
-            <PastMaintenanceByDay incidents={pastMaintenance} pageSlug={incidentPageSlug} days={block.settings.days} locale={page.language} timeZone={page.timezone} />
-          </section>
-        );
       case "SUBSCRIBE":
         return (
           <section className={`public-subscribe-block ${block.settings.style === "PANEL" ? "page-panel border border-[var(--line)] bg-[var(--surface)] p-[var(--page-block-padding)]" : ""}`}>

@@ -26,7 +26,7 @@ describe("public subscription panel placement", () => {
     );
 
     expect(markup).toContain('class="mx-auto mt-[var(--page-block-gap)] w-full max-w-2xl"');
-    expect(markup.indexOf('data-page-block="HISTORY_PREVIEW"')).toBeLessThan(markup.indexOf('data-page-block="SUBSCRIBE"'));
+    expect(markup.indexOf('data-page-block="SCHEDULED_MAINTENANCE"')).toBeLessThan(markup.indexOf('data-page-block="SUBSCRIBE"'));
   });
 
   it("also moves the illustrated-hero subscription below incident history", () => {
@@ -38,6 +38,6 @@ describe("public subscription panel placement", () => {
       }),
     );
 
-    expect(markup.indexOf('data-page-block="HISTORY_PREVIEW"')).toBeLessThan(markup.indexOf('data-page-block="SUBSCRIBE"'));
+    expect(markup.indexOf('data-page-block="SCHEDULED_MAINTENANCE"')).toBeLessThan(markup.indexOf('data-page-block="SUBSCRIBE"'));
   });
 });

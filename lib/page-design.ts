@@ -596,7 +596,6 @@ function baseDesign(templateKey: PageTemplateKey, brand = "#0f8ca8"): StatusPage
         primary: [
           b({ id: "active-incidents", type: "ACTIVE_INCIDENTS", hidden: false, settings: { heading: "Active incidents" } }),
           b({ id: "maintenance", type: "SCHEDULED_MAINTENANCE", hidden: false, settings: { heading: "Active maintenance" } }),
-          b({ id: "history-preview", type: "HISTORY_PREVIEW", hidden: false, settings: { heading: "Past maintenance", days: 14 } }),
           components,
           b({ id: "metrics", type: "METRICS", hidden: false, settings: { heading: "System metrics", columns: 2 } }),
         ],
@@ -713,7 +712,7 @@ export function templateDesign(templateKey: PageTemplateKey, brand = "#0f8ca8"):
   } else if (templateKey === "MINIMAL_ENTERPRISE") {
     for (const placement of design.surfaces.status.grid.desktop) Object.assign(placement, { column: 1, span: 12 });
   }
-  for (const type of ["ACTIVE_INCIDENTS", "SCHEDULED_MAINTENANCE", "HISTORY_PREVIEW"] as const) {
+  for (const type of ["ACTIVE_INCIDENTS", "SCHEDULED_MAINTENANCE"] as const) {
     place(type, 1, 12);
   }
   return statusPageDesignSchema.parse(design);

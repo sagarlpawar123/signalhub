@@ -14,7 +14,9 @@ export function PageSurfaceLayout({
   intro?: ReactNode;
   renderBlock: (block: PageDesignBlock) => ReactNode;
 }) {
-  const blocks = allSurfaceBlocks(design, surface);
+  const blocks = allSurfaceBlocks(design, surface).filter(
+    (block) => surface !== "status" || block.type !== "HISTORY_PREVIEW",
+  );
   // These content-led layouts keep the optional subscription action after the
   // operational content instead of competing with incident history.
   const subscriptionAfterContent = new Set(["GROUPED_DIRECTORY", "ILLUSTRATED_HERO"]);

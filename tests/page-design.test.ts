@@ -55,17 +55,14 @@ describe("status page design", () => {
         const orderedBlocks = [...placements]
           .sort((left, right) => left.order - right.order)
           .map((placement) => allSurfaceBlocks(design, "status").find((block) => block.id === placement.blockId))
-          .filter((block) => block?.type === "ACTIVE_INCIDENTS" || block?.type === "SCHEDULED_MAINTENANCE" || block?.type === "HISTORY_PREVIEW");
+          .filter((block) => block?.type === "ACTIVE_INCIDENTS" || block?.type === "SCHEDULED_MAINTENANCE");
 
-        expect(orderedBlocks.map((block) => block?.type)).toEqual([
-          "ACTIVE_INCIDENTS",
-          "SCHEDULED_MAINTENANCE",
-          "HISTORY_PREVIEW",
-        ]);
+        expect(orderedBlocks.map((block) => block?.type)).toEqual(["ACTIVE_INCIDENTS", "SCHEDULED_MAINTENANCE"]);
         expect(orderedBlocks.every((block) =>
           placements.find((placement) => placement.blockId === block?.id)?.column === 1
           && placements.find((placement) => placement.blockId === block?.id)?.span === columns
         )).toBe(true);
+        expect(allSurfaceBlocks(design, "status").some((block) => block.type === "HISTORY_PREVIEW")).toBe(false);
       }
     }
   });
@@ -85,8 +82,41 @@ describe("status page design", () => {
     const renderedTypes = [...html.matchAll(/data-page-block="([^"]+)"/g)].map((match) => match[1]);
 
     expect(renderedTypes.indexOf("ACTIVE_INCIDENTS")).toBeLessThan(renderedTypes.indexOf("SCHEDULED_MAINTENANCE"));
-    expect(renderedTypes.indexOf("SCHEDULED_MAINTENANCE")).toBeLessThan(renderedTypes.indexOf("HISTORY_PREVIEW"));
     expect(renderedTypes.indexOf("SCHEDULED_MAINTENANCE")).toBeLessThan(renderedTypes.indexOf("COMPONENT_STATUS"));
+  });
+
+  it("omits legacy history previews from status layouts while preserving hub history previews", () => {
+    const statusDesign = templateDesign("CENTERED_SUMMARY");
+    statusDesign.surfaces.status.primary.push({
+      id: "legacy-history-preview",
+      type: "HISTORY_PREVIEW",
+      hidden: false,
+      settings: { heading: "Past maintenance", days: 14 },
+    });
+    const statusMarkup = renderToStaticMarkup(
+      PageSurfaceLayout({
+        design: statusDesign,
+        surface: "status",
+        renderBlock: (block) => block.id,
+      })
+    );
+    const hubDesign = templateDesign("CENTERED_SUMMARY");
+    hubDesign.surfaces.hub.primary.push({
+      id: "hub-history-preview",
+      type: "HISTORY_PREVIEW",
+      hidden: false,
+      settings: { heading: "Past incidents", days: 14 },
+    });
+    const hubMarkup = renderToStaticMarkup(
+      PageSurfaceLayout({
+        design: applyPageTemplateLayout(hubDesign, hubDesign.templateKey),
+        surface: "hub",
+        renderBlock: (block) => block.id,
+      })
+    );
+
+    expect(statusMarkup).not.toContain('data-page-block="HISTORY_PREVIEW"');
+    expect(hubMarkup).toContain('data-page-block="HISTORY_PREVIEW"');
   });
 
   it("keeps the editor picker focused on distinct template starting points", () => {
