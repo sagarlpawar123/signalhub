@@ -1,3 +1,4 @@
+import { SingtelStatusPortal } from "@/components/public/SingtelStatusPortal";
 import { notFound, redirect } from "next/navigation";
 import { checkPageAccess } from "@/lib/access";
 import { getComponentsForPage, getIncidentsForPage, getMetricsForPage, splitActiveAndPast } from "@/lib/public-data";
@@ -184,6 +185,27 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ s
       default:
         return null;
     }
+  }
+
+  // This installation's Singtel portal has a dedicated dashboard presentation.
+  // Access checks and audience-scoped data above remain shared with other pages.
+  if (page.slug === "singtel-status") {
+    const blocks = [...design.surfaces.status.full, ...design.surfaces.status.primary, ...design.surfaces.status.sidebar].filter((block) => !block.hidden);
+    const categoryById = new Map(groups.flatMap((group) => group.components.map((component) => [component.id, group.name] as const)));
+    const quickLinks = blocks.flatMap((block) => block.type === "LINK_CARDS" ? block.settings.links : []);
+    return <PageDesignShell pageId={page.id} publishedVersion={page.publishedDesignVersion} design={design} customCss={scopedCss} language={page.language}>
+      {page.analyticsEnabled && <PublicAnalytics pageSlug={page.slug} />}
+      <SingtelStatusPortal
+        page={{ ...page, logoUrl: design.presentation.logoUrl, coverImageUrl: design.presentation.coverImageUrl, supportUrl: design.presentation.supportUrl }}
+        basePath={basePath}
+        services={allComponentsFlat.map((component) => ({ id: component.id, name: component.name, description: component.description, status: component.status, category: categoryById.get(component.id) ?? "General" }))}
+        incidents={incidents} updatedAt={lastActivity} now={now}
+        subscribe={<SubscribeModal pageSlug={page.slug} brandColor="#0056df" feedsEnabled={page.type === "PUBLIC"} feedBasePath={basePath ? undefined : "/feed"} components={allComponentsFlat.map((component) => ({ id: component.id, name: component.name }))} />}
+        announcements={blocks.filter((block) => block.type === "ANNOUNCEMENTS").map((block) => <div key={block.id} className="mb-4">{renderBlock(block)}</div>)}
+        extras={blocks.filter((block) => block.type === "RICH_TEXT" || block.type === "METRICS").map((block) => <div key={block.id} className="mt-4">{renderBlock(block)}</div>)}
+        quickLinks={quickLinks}
+      />
+    </PageDesignShell>;
   }
 
   return (

@@ -251,6 +251,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
             heading: "Layout, style, and brand",
             paragraphs: [
               "Layout offers Standard (a clear overview for most pages), Banner (leads with a cover image and page identity), and Compact (more service detail in less space). Style presets such as Default, Ocean, Emerald, Sunset, Violet, Slate, High contrast, and Warm paper preview colors, corners, and depth on each card.",
+              "The singtel-status page uses a dedicated light dashboard. Published logo, cover and support settings apply; layout and style presets do not rearrange it. Component groups provide service categories.",
               "Choosing a layout changes the page header, spacing, content width, and how services are laid out, so the public page looks different once you publish. Choose a Brand color; if it is too light for white button text, the editor asks for a darker one. Brand assets are a Logo (public page header), a Site icon (browser tab), and an optional Cover image, which is shown in full by default.",
             ],
           },
