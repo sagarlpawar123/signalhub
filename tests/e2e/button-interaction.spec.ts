@@ -53,10 +53,46 @@ test.describe("button interaction guard", () => {
     await expect(button).toHaveAttribute("aria-busy", "true");
     await expect.poll(() => page.evaluate(() => (window as typeof window & { guardSubmitCount?: number }).guardSubmitCount)).toBe(1);
 
-    await expect(page.getByRole("alert")).toContainText("Save settings timed out. Please try again.");
+    await expect(page.getByRole("alert").filter({ hasText: "timed out" })).toContainText("Save settings timed out. Please try again.");
     await expect(button).not.toHaveAttribute("data-button-guard-locked", "true");
 
     await button.click();
     await expect.poll(() => page.evaluate(() => (window as typeof window & { guardSubmitCount?: number }).guardSubmitCount)).toBe(2);
   });
+});
+
+
+test("pending actions keep their lock past the UI deadline and release on completion", async ({ page }) => {
+  await page.goto("/");
+  await page.clock.install();
+  await page.evaluate(() => {
+    const form = document.createElement("form");
+    form.id = "managed-action";
+    const button = document.createElement("button");
+    button.id = "managed-submit";
+    button.type = "submit";
+    button.textContent = "Schedule maintenance";
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      form.dataset.actionPending = "true";
+      const state = window as typeof window & { managedSubmitCount?: number };
+      state.managedSubmitCount = (state.managedSubmitCount ?? 0) + 1;
+    });
+    form.append(button);
+    document.body.append(form);
+  });
+  const button = page.locator("#managed-submit");
+  await button.click();
+  await expect(button).toHaveAttribute("data-button-guard-locked", "true");
+  await page.clock.fastForward(16_000);
+  await expect(button).toHaveAttribute("data-button-guard-locked", "true");
+  await expect(page.getByRole("alert").filter({ hasText: "timed out" })).toHaveCount(0);
+  await button.dispatchEvent("click");
+  expect(await page.evaluate(() => (window as typeof window & { managedSubmitCount?: number }).managedSubmitCount)).toBe(1);
+  await page.evaluate(() => {
+    const form = document.getElementById("managed-action")!;
+    delete form.dataset.actionPending;
+    form.dispatchEvent(new Event("signalhub:button-action-complete", { bubbles: true }));
+  });
+  await expect(button).not.toHaveAttribute("data-button-guard-locked", "true");
 });
