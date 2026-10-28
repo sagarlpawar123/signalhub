@@ -34,10 +34,17 @@ export function PlatformActionForm({
   ...formProps
 }: PlatformActionFormProps) {
   const formClassName = formProps.className ?? "";
-  const [state, formAction] = useActionState(
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, formAction, pending] = useActionState(
     runPlatformActionWithFeedback.bind(null, action, successMessage),
     INITIAL_STATE
   );
+
+  useEffect(() => {
+    if (!pending) {
+      formRef.current?.dispatchEvent(new Event("signalhub:button-action-complete", { bubbles: true }));
+    }
+  }, [pending, state]);
 
   const router = useRouter();
   const refreshed = useRef<ActionFeedbackState>(INITIAL_STATE);
@@ -53,11 +60,16 @@ export function PlatformActionForm({
 
   return (
     <form
+      ref={formRef}
       action={formAction}
+      data-action-pending={pending || undefined}
+      aria-busy={pending || undefined}
       {...formProps}
       className={cn(formClassName, formClassName.includes("flex") && "flex-wrap")}
     >
-      {children}
+      <fieldset disabled={pending} className="contents">
+        {children}
+      </fieldset>
     </form>
   );
 }

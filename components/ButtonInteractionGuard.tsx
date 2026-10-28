@@ -82,6 +82,10 @@ export function ButtonInteractionGuard({ children }: { children: ReactNode }) {
     };
 
     const notifyTimeout = (lock: ButtonLock) => {
+      // A pending React action may already have committed its mutation. A UI
+      // timer cannot cancel it or safely tell the operator to submit again.
+      // Managed forms release this lock when their action settles.
+      if (lock.form?.dataset.actionPending === "true") return;
       release(lock);
       if (lock.mode === "interaction" || !lock.button.isConnected) return;
       // React-controlled pending buttons can otherwise remain natively disabled

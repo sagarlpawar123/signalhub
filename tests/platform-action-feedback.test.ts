@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { redirect } from "next/navigation";
 import { runPlatformActionWithFeedback } from "../app/platform/(protected)/action-feedback";
 
 const IDLE = { status: "idle", message: "" } as const;
 
 describe("platform action feedback", () => {
+  it("preserves the success redirect instead of displaying NEXT_REDIRECT as an error", async () => {
+    await expect(runPlatformActionWithFeedback(
+      async () => redirect("/organization/events/maintenance-id"),
+      "Maintenance scheduled",
+      IDLE,
+      new FormData()
+    )).rejects.toMatchObject({ digest: expect.stringContaining("NEXT_REDIRECT") });
+  });
+
   it("returns serializable success state from the server boundary", async () => {
     const state = await runPlatformActionWithFeedback(
       async () => undefined,
