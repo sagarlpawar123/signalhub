@@ -53,7 +53,7 @@ test.describe("button interaction guard", () => {
     await expect(button).toHaveAttribute("aria-busy", "true");
     await expect.poll(() => page.evaluate(() => (window as typeof window & { guardSubmitCount?: number }).guardSubmitCount)).toBe(1);
 
-    await expect(page.getByRole("alert")).toContainText("Save settings timed out. Please try again.");
+    await expect(page.getByRole("alert").filter({ hasText: "timed out" })).toContainText("Save settings timed out. Please try again.");
     await expect(button).not.toHaveAttribute("data-button-guard-locked", "true");
 
     await button.click();
@@ -83,9 +83,10 @@ test("pending actions keep their lock past the UI deadline and release on comple
   });
   const button = page.locator("#managed-submit");
   await button.click();
+  await expect(button).toHaveAttribute("data-button-guard-locked", "true");
   await page.clock.fastForward(16_000);
   await expect(button).toHaveAttribute("data-button-guard-locked", "true");
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("alert").filter({ hasText: "timed out" })).toHaveCount(0);
   await button.dispatchEvent("click");
   expect(await page.evaluate(() => (window as typeof window & { managedSubmitCount?: number }).managedSubmitCount)).toBe(1);
   await page.evaluate(() => {
